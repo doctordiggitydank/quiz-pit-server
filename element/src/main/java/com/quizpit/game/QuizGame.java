@@ -1,6 +1,8 @@
 package com.quizpit.game;
 
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 import com.quizpit.api.service.QuizPitService;
 import com.quizpit.service.GuestStarService;
 import com.quizpit.service.ProfileService;
@@ -35,6 +37,7 @@ import java.util.concurrent.TimeUnit;
  * plus a speed bonus up to 50. The UE stage (one socket) and any number of web
  * host-panel sockets receive full state pushes and per-second ticks.
  */
+@ElementServiceExport
 public class QuizGame implements QuizPitService {
 
     private static final Logger logger = LoggerFactory.getLogger(QuizGame.class);
@@ -79,6 +82,7 @@ public class QuizGame implements QuizPitService {
     private volatile Session stageSocket;
     private final List<Session> hostSockets = new CopyOnWriteArrayList<>();
 
+    @Inject
     public QuizGame(final TwitchGateway gateway, final GuestStarService guestStars,
                     final ProfileService profiles, final QuestionBank bank) {
         this.gateway = gateway;

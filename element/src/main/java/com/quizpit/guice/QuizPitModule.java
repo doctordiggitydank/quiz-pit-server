@@ -26,8 +26,13 @@ public class QuizPitModule extends PrivateModule {
         bind(TwitchGateway.class).asEagerSingleton();
         bind(QuizGame.class).asEagerSingleton();
 
+        // The REST/WS endpoints resolve services through the ServiceLocator,
+        // which only sees EXPOSED services (the Doodle or Die lesson).
         bind(QuizPitService.class).to(QuizGame.class);
         expose(QuizPitService.class);
+        expose(QuizGame.class);
+        expose(TwitchGateway.class);
+        expose(GuestStarService.class);
 
     }
 

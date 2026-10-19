@@ -1,7 +1,9 @@
 package com.quizpit.service;
 
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.quizpit.twitch.HelixClient;
+import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +23,7 @@ import java.util.function.Consumer;
  * links (the beta APIs are confirmed to lag the product, so the snapshot is
  * also the recovery path after a missed event).
  */
+@ElementServiceExport
 public class GuestStarService {
 
     private static final Logger logger = LoggerFactory.getLogger(GuestStarService.class);
@@ -36,6 +39,7 @@ public class GuestStarService {
 
     private volatile Consumer<List<GuestInfo>> rosterListener;
 
+    @Inject
     public GuestStarService(final HelixClient helix) {
         this.helix = helix;
     }

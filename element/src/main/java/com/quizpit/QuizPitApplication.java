@@ -4,7 +4,6 @@ import com.quizpit.rest.QuizRest;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.annotation.ElementServiceImplementation;
-import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import jakarta.ws.rs.core.Application;
 
 import java.util.Set;
@@ -32,9 +31,10 @@ public class QuizPitApplication extends Application {
 
     @Override
     public Set<Class<?>> getClasses() {
+        // NOTE: no OpenApiResource here — the swagger integration registers it
+        // itself, and a manual entry makes the model ambiguous (REST mount dies).
         return Set.of(
-                QuizRest.class,
-                OpenApiResource.class
+                QuizRest.class
         );
     }
 

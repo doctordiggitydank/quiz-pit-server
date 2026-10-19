@@ -1,6 +1,8 @@
 package com.quizpit.twitch;
 
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
 import com.quizpit.service.GuestStarService;
 import com.quizpit.service.ProfileService;
 import org.slf4j.Logger;
@@ -27,6 +29,7 @@ import java.util.function.Consumer;
  * Everything is optional: unconfigured, the gateway stays idle and the show
  * runs without chat/guests.
  */
+@ElementServiceExport
 public class TwitchGateway {
 
     private static final Logger logger = LoggerFactory.getLogger(TwitchGateway.class);
@@ -53,6 +56,7 @@ public class TwitchGateway {
     /** Host-link state for the WS clients. */
     public record LinkStatus(boolean linked, String login, String clientId, String scopes) {}
 
+    @Inject
     public TwitchGateway(final HelixClient helix, final GuestStarService guestStars,
                          final ProfileService profiles) {
         this.helix = helix;

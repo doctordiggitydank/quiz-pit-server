@@ -2,6 +2,7 @@ package com.quizpit.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.quizpit.twitch.HelixClient;
+import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,7 @@ public class ProfileService {
     private volatile String broadcasterToken;
     private volatile BiConsumer<String, String> listener;
 
+    @Inject
     public ProfileService(final HelixClient helix) {
         this.helix = helix;
     }
