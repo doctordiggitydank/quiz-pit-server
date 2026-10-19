@@ -781,6 +781,18 @@
    "correctIndex": 3
   },
   {
+   "id": "q0067",
+   "category": "What even is a Pokemon?",
+   "text": "Which of these is actually a Pokemon?",
+   "choices": [
+    "Mossquito",
+    "Florarach",
+    "Thornadillo",
+    "Cyrogonal"
+   ],
+   "correctIndex": 3
+  },
+  {
    "id": "q0068",
    "category": "What even is a Pokemon?",
    "text": "Which of these is actually a Pokemon?",
@@ -2857,6 +2869,18 @@
    "correctIndex": 1
   },
   {
+   "id": "q0241",
+   "category": "Mystery Mixtape 1990s",
+   "text": "So I start from the basement, my vocal impression / Becomes an obsession, or a possession",
+   "choices": [
+    "Fugees",
+    "Salt-N-Pepa",
+    "TLC",
+    "En Vogue"
+   ],
+   "correctIndex": 0
+  },
+  {
    "id": "q0242",
    "category": "Mystery Mixtape 1990s",
    "text": "Today is the greatest day I've ever known / Can't live for tomorrow, tomorrow's much too long",
@@ -3529,6 +3553,18 @@
    "correctIndex": 2
   },
   {
+   "id": "q0298",
+   "category": "Mystery Mixtape 2010-Now",
+   "text": "I'm having wicked dreams of leaving Tennessee / Hear Santa Monica, I swear it's calling me",
+   "choices": [
+    "Beyonce",
+    "Ariana Grande",
+    "Cardi B",
+    "Chappell Roan"
+   ],
+   "correctIndex": 3
+  },
+  {
    "id": "q0299",
    "category": "Mystery Mixtape 2010-Now",
    "text": "There's a fire starting in my heart / Reaching a fever pitch and it's bringing me out the dark",
@@ -3551,6 +3587,18 @@
     "Fall Out Boy"
    ],
    "correctIndex": 0
+  },
+  {
+   "id": "q0301",
+   "category": "Mystery Mixtape 2010-Now",
+   "text": "This one, for them hood girls / Good girls, straight masterpieces",
+   "choices": [
+    "Pharrell Williams",
+    "Justin Timberlake",
+    "Travis Scott",
+    "Mark Ronson"
+   ],
+   "correctIndex": 3
   },
   {
    "id": "q0302",
@@ -4005,6 +4053,18 @@
     "Cannula",
     "Ramekin",
     "Discada"
+   ],
+   "correctIndex": 1
+  },
+  {
+   "id": "q0340",
+   "category": "Tool Time",
+   "text": "Which of these would a mortician NOT use?",
+   "choices": [
+    "Trocars",
+    "Bogrács",
+    "aneurysm hooks",
+    "Fixation clamps"
    ],
    "correctIndex": 1
   },
@@ -5545,6 +5605,18 @@
    "correctIndex": 0
   },
   {
+   "id": "q0469",
+   "category": "Disney Princesses",
+   "text": "Which Disney Princess was the first to receive a star on the Hollywood Walk of Fame on her 50th Anniversary?",
+   "choices": [
+    "Snow White",
+    "Cinderella",
+    "Aurora",
+    "Ariel"
+   ],
+   "correctIndex": 0
+  },
+  {
    "id": "q0470",
    "category": "Disney Princesses",
    "text": "Which Disney Princess is the only one to have a tattoo in her official character design?",
@@ -6613,6 +6685,18 @@
    "correctIndex": 3
   },
   {
+   "id": "q0559",
+   "category": "Don't Sue Us, Nintendo",
+   "text": "Which of these titles don't have milk as an inventory item?",
+   "choices": [
+    "Tomodatchi Life: LtD",
+    "LoZ: Skyward Sword",
+    "Paper Mario",
+    "LoZ: Ocarina of Time"
+   ],
+   "correctIndex": 1
+  },
+  {
    "id": "q0560",
    "category": "Don't Sue Us, Nintendo",
    "text": "Who is NOT playable in any Super Smash Bros game?",
@@ -6851,6 +6935,18 @@
     "Rice"
    ],
    "correctIndex": 0
+  },
+  {
+   "id": "q0580",
+   "category": "Don't Sue Us, Nintendo",
+   "text": "What is Yoshi's full name?",
+   "choices": [
+    "Yoshimedus Bach-Mozart",
+    "Yoshithon B. Yumyums",
+    "T. Yoshisaur Munchikoopas",
+    "Yoshi"
+   ],
+   "correctIndex": 2
   },
   {
    "id": "q0581",
@@ -7513,6 +7609,18 @@
    "correctIndex": 0
   },
   {
+   "id": "q0636",
+   "category": "Video Game Dialog",
+   "text": "\"The numbers, Mason! What do they mean?\"",
+   "choices": [
+    "Half-Life",
+    "Call of Duty: Black Ops",
+    "Resident Evil 3",
+    "Earthbound"
+   ],
+   "correctIndex": 1
+  },
+  {
    "id": "q0637",
    "category": "Video Game Dialog",
    "text": "\"Stop it! Don't open that door!\"",
@@ -7749,6 +7857,18 @@
     "Stanley Parable",
     "Portal",
     "Portal 2"
+   ],
+   "correctIndex": 2
+  },
+  {
+   "id": "q0657",
+   "category": "Video Game Dialog",
+   "text": "\"Ya know...maybe that's gonna be my superhero name now. \"Sad-Man.\"\"",
+   "choices": [
+    "Banjo-Kazooie",
+    "Super Mario Galaxy 2",
+    "Animal Crossing: New Horizons",
+    "Conker's Day Off"
    ],
    "correctIndex": 2
   },
@@ -8749,6 +8869,18 @@
    "correctIndex": 1
   },
   {
+   "id": "q0741",
+   "category": "High School Never Ends",
+   "text": "Which conflict is associated with the period called the \"Reign of Terror?\"",
+   "choices": [
+    "American Revolution",
+    "French Revolution",
+    "World War I",
+    "The Cold War"
+   ],
+   "correctIndex": 1
+  },
+  {
    "id": "q0742",
    "category": "High School Never Ends",
    "text": "The Suez Canal connects which bodies of water?",
@@ -8999,6 +9131,18 @@
     "Choose what enters the cell"
    ],
    "correctIndex": 2
+  },
+  {
+   "id": "q0763",
+   "category": "High School Never Ends",
+   "text": "How do Scantrons work?",
+   "choices": [
+    "Feeling the bumps",
+    "Measures light through page",
+    "Converting the page digitally",
+    "Detecting graphite"
+   ],
+   "correctIndex": 1
   },
   {
    "id": "q0764",
@@ -9625,6 +9769,18 @@
    "correctIndex": 2
   },
   {
+   "id": "q0816",
+   "category": "Where is it?",
+   "text": "Where is Wee Waa",
+   "choices": [
+    "USA",
+    "Norway",
+    "Vietnam",
+    "Australia"
+   ],
+   "correctIndex": 3
+  },
+  {
    "id": "q0817",
    "category": "Where is it?",
    "text": "Where is Woodenbong?",
@@ -10187,6 +10343,18 @@
     "Cloning"
    ],
    "correctIndex": 1
+  },
+  {
+   "id": "q0864",
+   "category": "Nerdy Science Stuff",
+   "text": "Which particle is its own antiparticle?",
+   "choices": [
+    "Quark",
+    "Electron",
+    "Proton",
+    "Photon"
+   ],
+   "correctIndex": 3
   },
   {
    "id": "q0865",
