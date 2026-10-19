@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Quiz Pit — Host Panel</title>
+<style>
+  :root {
+    --bg: #16181f; --panel: #1f2230; --panel2: #262a3c; --line: #34394f;
+    --text: #e8eaf2; --dim: #9aa0b5; --accent: #f94144; --good: #90be6d;
+    --gold: #f9c74f; --blue: #277da1;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; background: var(--panel);
+           border-bottom: 2px solid var(--accent); }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: 1px; }
+  #conn { font-size: 12px; padding: 2px 10px; border-radius: 10px; background: var(--accent); color: #fff; }
+  #conn.up { background: var(--good); color: #123; }
+  #twitchstate { font-size: 12px; color: var(--dim); }
+  main { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; padding: 14px 20px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .card h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--dim); }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
+  button { font: inherit; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--line);
+           background: var(--panel2); color: var(--text); cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); font-weight: 700; }
+  button:disabled { opacity: .4; cursor: default; }
+  #question-text { font-size: 20px; font-weight: 600; margin: 0 0 12px; }
+  .choice { display: flex; gap: 10px; padding: 9px 12px; border-radius: 8px; margin-bottom: 6px;
+            background: var(--panel2); border: 1px solid var(--line); }
+  .choice .n { font-weight: 800; color: var(--gold); min-width: 18px; }
+  .choice.correct { border-color: var(--good); background: #23301c; }
+  .choice.correct::after { content: " ✓"; color: var(--good); font-weight: 800; margin-left: auto; }
+  #timer { font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 800; color: var(--gold); }
+  .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .muted { color: var(--dim); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { padding: 5px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  td.score, th.score { text-align: right; font-variant-numeric: tabular-nums; }
+  #guests { display: flex; flex-direction: column; gap: 8px; }
+  .guest { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px;
+           background: var(--panel2); border: 1px solid var(--line); }
+  .guest img { width: 40px; height: 40px; border-radius: 50%; background: var(--line); object-fit: cover; }
+  .guest .live { font-size: 10px; font-weight: 800; letter-spacing: 1px; padding: 1px 7px;
+                 border-radius: 8px; background: var(--accent); color: #fff; }
+  .guest .ready { font-size: 10px; font-weight: 800; letter-spacing: 1px; padding: 1px 7px;
+                  border-radius: 8px; background: var(--blue); color: #fff; }
+  #feed { max-height: 260px; overflow-y: auto; font-size: 13px; }
+  #feed div { padding: 3px 0; border-bottom: 1px solid #2a2e40; }
+  #feed .ans b { color: var(--gold); }
+  #feed .cheer b { color: #bf94ff; }
+  #feed .err { color: var(--accent); }
+  #devicedialog { display: none; margin-top: 10px; padding: 12px; border-radius: 8px;
+                  background: var(--panel2); border: 1px dashed var(--accent); }
+  #devicedialog a { color: var(--gold); }
+  #devcode { font-size: 22px; font-weight: 800; letter-spacing: 2px; color: var(--gold); }
+</style>
+</head>
+<body>
+<header>
+  <h1>THE QUIZ PIT</h1>
+  <span id="conn">connecting…</span>
+  <span id="twitchstate"></span>
+  <span style="margin-left:auto" class="muted">phase <b id="phase">—</b></span>
+</header>
+<main>
+  <div class="controls card">
+    <button class="primary" id="btn-start">Start Show</button>
+    <button id="btn-next">Next Question</button>
+    <button id="btn-reveal">Reveal Answer</button>
+    <button id="btn-end">End Show</button>
+    <button id="btn-reset">Reset to Lobby</button>
+    <span class="muted" style="align-self:center">Answers open to chat on Next Question.</span>
+  </div>
+
+  <div class="card" id="twitchcard">
+    <h2>Twitch</h2>
+    <div id="twitchbody" class="muted">…</div>
+    <div id="devicedialog">
+      Go to <a href="https://www.twitch.tv/activate" target="_blank" rel="noopener">twitch.tv/activate</a>
+      and enter:<br><span id="devcode">—</span>
+      <div class="muted" id="devstatus">waiting for authorization…</div>
+      <button id="btn-devcancel" style="margin-top:8px">Cancel</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row"><h2>Question</h2><span><span id="timer">—</span> <span class="muted" id="qnum"></span></span></div>
+    <div id="question-box"><p class="muted">Open a question to see it here.</p></div>
+    <div class="muted" id="answered"></div>
+  </div>
+
+  <div class="card">
+    <h2>StreamTogether Guests</h2>
+    <div id="guests"><div class="muted">No Guest Star session.</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Leaderboard</h2>
+    <table><thead><tr><th>#</th><th>Viewer</th><th class="score">Score</th><th class="score">✓</th></tr></thead>
+    <tbody id="board"><tr><td colspan="4" class="muted">No answers yet.</td></tr></tbody></table>
+  </div>
+
+  <div class="card">
+    <h2>Live Feed</h2>
+    <div id="feed"></div>
+  </div>
+</main>
+<script>
+(function () {
+  "use strict";
+  var qs = new URLSearchParams(location.search);
+  var restBase = (qs.get("rest") || location.origin.replace(location.origin.startsWith("https") ? "https" : "http",
+      location.origin.startsWith("https") ? "wss" : "ws")) && (location.origin.startsWith("https") ? "https" : "http") + "://" + location.host;
+  var wsUrl = qs.get("ws") || (location.origin.startsWith("https") ? "wss" : "ws") + "://" + location.host + "/element/quizpit/ws/host";
+  var restUrl = (location.origin.startsWith("https") ? "https" : "http") + "://" + location.host + "/element/quizpit/rest/status";
+
+  var ws = null, clientId = "", scopes = "", linked = false, connected = false;
+  var devTimer = null, devCode = null, devInterval = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var conn = $("conn");
+
+  function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+  function cmd(t) { return function () { send({ type: t }); }; }
+
+  $("btn-start").onclick = cmd("host_start");
+  $("btn-next").onclick = cmd("host_next");
+  $("btn-reveal").onclick = cmd("host_reveal");
+  $("btn-end").onclick = cmd("host_end");
+  $("btn-reset").onclick = cmd("host_reset");
+
+  function feed(kind, html) {
+    var el = document.createElement("div");
+    el.className = kind;
+    el.innerHTML = html;
+    var feedEl = $("feed");
+    feedEl.prepend(el);
+    while (feedEl.children.length > 150) feedEl.removeChild(feedEl.lastChild);
+  }
+
+  function renderGuests(guests) {
+    var box = $("guests");
+    if (!guests || !guests.length) {
+      box.innerHTML = '<div class="muted">No Guest Star session.</div>';
+      return;
+    }
+    box.innerHTML = "";
+    guests.forEach(function (g) {
+      var div = document.createElement("div");
+      div.className = "guest";
+      var img = document.createElement("img");
+      img.alt = "";
+      if (g.picUrl) img.src = g.picUrl;
+      var name = document.createElement("span");
+      name.textContent = g.displayName || g.login || g.userId;
+      name.style.flex = "1";
+      var badge = document.createElement("span");
+      badge.className = g.isLive ? "live" : "ready";
+      badge.textContent = g.isLive ? "LIVE" : (g.state || "READY").toUpperCase();
+      div.appendChild(img); div.appendChild(name); div.appendChild(badge);
+      box.appendChild(div);
+    });
+  }
+
+  function renderState(s) {
+    $("phase").textContent = s.phase || "—";
+    $("timer").textContent = (s.secondsLeft != null && s.secondsLeft >= 0) ? s.secondsLeft + "s" : "—";
+    $("qnum").textContent = s.totalQuestions ? ("Q" + (s.questionIndex + 1) + "/" + s.totalQuestions) : "";
+    var q = s.question;
+    var box = $("question-box");
+    if (q) {
+      var showCorrect = s.phase === "REVEAL";
+      var html = '<p id="question-text">' + escapeHtml(q.text) + ' <span class="muted">(' + escapeHtml(q.category) + ')</span></p>';
+      q.choices.forEach(function (c, i) {
+        html += '<div class="choice' + (showCorrect && i === q.correctIndex ? ' correct' : '') + '">'
+             + '<span class="n">' + (i + 1) + '</span>' + escapeHtml(c) + '</div>';
+      });
+      box.innerHTML = html;
+      $("timer").textContent = showCorrect ? "—" : $("timer").textContent;
+    } else {
+      box.innerHTML = '<p class="muted">Open a question to see it here.</p>';
+    }
+    $("answered").textContent = s.reveal ? ("answered: " + s.reveal.answered) : "";
+    var board = $("board");
+    if (s.leaderboard && s.leaderboard.length) {
+      board.innerHTML = s.leaderboard.map(function (p) {
+        return '<tr><td>' + p.rank + '</td><td>' + escapeHtml(p.username) + '</td><td class="score">'
+             + p.score + '</td><td class="score">' + p.correct + '</td></tr>';
+      }).join("");
+    } else {
+      board.innerHTML = '<tr><td colspan="4" class="muted">No answers yet.</td></tr>';
+    }
+  }
+
+  function renderTwitch() {
+    $("twitchstate").textContent = linked ? "linked: @" + (window._twitchLogin || "") : "not linked";
+    var body = $("twitchbody");
+    if (linked) {
+      body.innerHTML = 'Broadcaster linked. Chat answers, cheers and the StreamTogether roster are live.';
+      return;
+    }
+    body.innerHTML = clientId
+      ? 'Link your Twitch account so chat answers, cheers and <b>StreamTogether guest tracking</b> work.'
+      : 'Server is missing <code>twitch.deviceflow.client.id</code> — set it in the deployment attributes.';
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function handle(msg) {
+    switch (msg.type) {
+      case "hello":
+        linked = msg.twitch.linked; clientId = msg.twitch.clientId; scopes = msg.twitch.scopes;
+        window._twitchLogin = msg.twitch.login;
+        renderGuests(msg.guests); renderTwitch();
+        fetch(restUrl).then(function (r) { return r.json(); }).then(renderState).catch(function () {});
+        break;
+      case "state": renderState(msg); break;
+      case "tick": $("timer").textContent = msg.secondsLeft + "s"; break;
+      case "guests": renderGuests(msg.guests); break;
+      case "chat_answer":
+        feed("ans", "<b>" + escapeHtml(msg.username) + "</b> answered " + (msg.choice + 1));
+        $("answered").textContent = "answered: " + msg.answered;
+        break;
+      case "cheer": feed("cheer", "<b>" + escapeHtml(msg.username) + "</b> cheered " + msg.bits + " bits"); break;
+      case "host_error": feed("err", escapeHtml(msg.message)); break;
+      case "show_start": feed("ans", "Show started — " + msg.questions + " questions"); break;
+    }
+  }
+
+  function connect() {
+    conn.className = ""; conn.textContent = "connecting…";
+    ws = new WebSocket(wsUrl);
+    ws.onopen = function () { connected = true; conn.className = "up"; conn.textContent = "live"; };
+    ws.onclose = function () {
+      connected = false; conn.className = ""; conn.textContent = "reconnecting…";
+      setTimeout(connect, 3000);
+    };
+    ws.onmessage = function (ev) {
+      try { handle(JSON.parse(ev.data)); } catch (e) { }
+    };
+  }
+
+  // ---- Broadcaster device-flow OAuth (public client) ----
+  $("twitchbody").addEventListener("click", function (ev) {
+    if (linked || !clientId) return;
+    startDeviceFlow();
+  });
+  $("twitchbody").innerHTML = "Click here to link your Twitch account.";
+
+  function startDeviceFlow() {
+    fetch("https://id.twitch.tv/oauth2/device?client_id=" + encodeURIComponent(clientId)
+        + "&scopes=" + encodeURIComponent(scopes), { method: "POST" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        devCode = d;
+        $("devcode").textContent = d.user_code;
+        $("devicedialog").style.display = "block";
+        $("devstatus").textContent = "waiting for authorization…";
+        devInterval = d.interval || 5;
+        pollDevice(d.device_code, d.expires_in);
+      })
+      .catch(function () { feed("err", "Device flow failed to start (is the client id valid?)"); });
+  }
+
+  function pollDevice(code) {
+    devTimer = setTimeout(function () {
+      var body = "client_id=" + encodeURIComponent(clientId)
+        + "&device_code=" + encodeURIComponent(code)
+        + "&grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code";
+      fetch("https://id.twitch.tv/oauth2/token", { method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.access_token) {
+            $("devicedialog").style.display = "none";
+            send({ type: "twitch_link", login: d.user_id ? null : null, userId: null,
+                   accessToken: d.access_token, refreshToken: d.refresh_token });
+            // Resolve the login name via the stage: the server needs userId+login.
+            fetch("https://api.twitch.tv/helix/users", {
+              headers: { "Authorization": "Bearer " + d.access_token,
+                         "Client-Id": clientId } })
+              .then(function (r) { return r.json(); })
+              .then(function (u) {
+                var me = u.data && u.data[0];
+                send({ type: "twitch_link", login: me ? me.login : null,
+                       userId: me ? me.id : null,
+                       accessToken: d.access_token, refreshToken: d.refresh_token });
+              });
+          } else if (d.error === "authorization_pending") {
+            pollDevice(code);
+          } else if (d.error === "slow_down") {
+            devInterval += 5; pollDevice(code);
+          } else {
+            $("devstatus").textContent = "failed: " + (d.message || d.error);
+          }
+        })
+        .catch(function () { pollDevice(code); });
+    }, devInterval * 1000);
+  }
+
+  $("btn-devcancel").onclick = function () {
+    if (devTimer) clearTimeout(devTimer);
+    $("devicedialog").style.display = "none";
+  };
+
+  setInterval(function () { send({ type: "ping" }); }, 20000);
+  connect();
+})();
+</script>
+</body>
+</html>
