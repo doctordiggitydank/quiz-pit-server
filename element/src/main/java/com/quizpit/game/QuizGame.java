@@ -194,11 +194,13 @@ public class QuizGame implements QuizPitService {
                 "bits", cheer.bits()));
     }
 
-    /** "!1".."!4" or "!a".."!d", case-insensitive; -1 = not an answer. */
+    /** "!1".."!4" or "!a".."!d", case-insensitive; -1 = not an answer.
+     *  Strict: anything after the choice character ("!42", "!1a") is NOT an
+     *  answer — chat is full of lookalikes and a wrong match scores points. */
     static int parseChoice(final String message) {
         if (message == null) return -1;
         final String m = message.trim().toLowerCase();
-        if (!m.startsWith("!") || m.length() < 2) return -1;
+        if (!m.startsWith("!") || m.length() != 2) return -1;
         return switch (m.charAt(1)) {
             case '1', 'a' -> 0;
             case '2', 'b' -> 1;

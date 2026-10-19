@@ -75,6 +75,12 @@
             <artifactId>jakarta.websocket-client-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Unit tests only; test scope keeps junit out of the .elm archive. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Jackson for the Twitch Helix/EventSub JSON and WS message protocol -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -100,6 +106,12 @@
 
     <build>
         <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+            </plugin>
 
             <!--
                 This run of the maven-dependency-plugin builds the ELM file containing the Element formatted in
