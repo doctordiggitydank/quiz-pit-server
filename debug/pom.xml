@@ -6,12 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.example.element</groupId>
+        <groupId>com.quizpit</groupId>
         <artifactId>parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.example.element</groupId>
+    <groupId>com.quizpit</groupId>
     <artifactId>debug</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>debug</name>

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.example.element</groupId>
+        <groupId>com.quizpit</groupId>
         <artifactId>parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
@@ -22,7 +22,7 @@
     <dependencies>
         <!-- The Element's API classifier artifact, copied into the api/ directory of the .elm archive. -->
         <dependency>
-            <groupId>com.example.element</groupId>
+            <groupId>com.quizpit</groupId>
             <artifactId>api</artifactId>
             <classifier>${api.classifier}</classifier>
         </dependency>
@@ -65,6 +65,20 @@
         <dependency>
             <groupId>jakarta.websocket</groupId>
             <artifactId>jakarta.websocket-api</artifactId>
+        </dependency>
+        <!--
+            Carries the client-side classes (ContainerProvider, WebSocketContainer) at compile time.
+            Kept out of the .elm by the BOM; the runtime supplies the API from the server's own classpath.
+        -->
+        <dependency>
+            <groupId>jakarta.websocket</groupId>
+            <artifactId>jakarta.websocket-client-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Jackson for the Twitch Helix/EventSub JSON and WS message protocol -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
         <!-- Swagger Annotations for API Documentation. -->
         <dependency>
@@ -235,7 +249,7 @@ Element-Builtin-Spis=${elm.builtin.spis}
                 Attaches the .elm archive to the build so it is installed and deployed alongside
                 the standard jar artifact. After mvn install the artifact is available in the
                 local Maven repository as:
-                    com.example.element:element:1.0-SNAPSHOT:elm
+                    com.quizpit:element:1.0-SNAPSHOT:elm
                 and can be published to a remote repository with mvn deploy.
             -->
             <plugin>

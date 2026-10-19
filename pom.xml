@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.example.element</groupId>
+    <groupId>com.quizpit</groupId>
     <artifactId>parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -20,7 +20,7 @@
         <encoding>UTF-8</encoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <elements.version>3.8.14</elements.version>
+        <elements.version>3.9.0-rc-9</elements.version>
         <swagger.version>2.2.22</swagger.version>
         <guice.version>7.0.0</guice.version>
         <rs.api>4.0.0</rs.api>
@@ -73,14 +73,14 @@
             -->
 
             <dependency>
-                <groupId>com.example.element</groupId>
+                <groupId>com.quizpit</groupId>
                 <artifactId>api</artifactId>
                 <version>${project.version}</version>
                 <scope>provided</scope>
             </dependency>
 
             <dependency>
-                <groupId>com.example.element</groupId>
+                <groupId>com.quizpit</groupId>
                 <artifactId>api</artifactId>
                 <version>${project.version}</version>
                 <classifier>${api.classifier}</classifier>
@@ -88,7 +88,7 @@
             </dependency>
 
             <dependency>
-                <groupId>com.example.element</groupId>
+                <groupId>com.quizpit</groupId>
                 <artifactId>element</artifactId>
                 <version>${project.version}</version>
             </dependency>

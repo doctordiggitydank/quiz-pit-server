@@ -2,10 +2,10 @@
   "schema": "1",
   "entries": [
     {
-      "label": "Example Element",
+      "label": "Quiz Pit",
       "icon": "Package",
       "bundlePath": "plugin.bundle.js",
-      "route": "example-element"
+      "route": "quiz-pit"
     }
   ]
 }
