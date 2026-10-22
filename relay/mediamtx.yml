@@ -1,0 +1,84 @@
+# The Quiz Pit — camera relay (MediaMTX v1.21.2)
+#
+# Cohost browsers publish a WHIP (WebRTC) feed into one of two stream paths;
+# Unreal Engine reads them back out as HLS. No transcoding anywhere — the
+# browser's H.264 720p60 feed passes straight through.
+#
+#   camb = TROLL B (AISoothsayer)     camc = TROLL C (Guest Troll)
+
+logLevel: info
+logDestinations: [stdout]
+
+# Only the two services we use; everything else off.
+rtsp: false
+rtmp: false
+srt: false
+moq: false
+api: false
+metrics: false
+pprof: false
+playback: false
+
+###############################################
+# HLS output — read by Unreal, fronted by the /relay/hls/ proxy route
+
+hls: true
+hlsAddress: :8888
+hlsAllowOrigins: ["*"]
+# mpegts = classic HLS for maximum player compatibility (UE Electra).
+hlsVariant: mpegts
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+hlsMuxerCloseAfter: 60s
+
+###############################################
+# WebRTC input (WHIP) — written by the cohost camera pages,
+# fronted by the /relay/whip/ proxy route; media itself on UDP 8189
+
+webrtc: true
+webrtcAddress: :8889
+webrtcEncryption: false
+webrtcAllowOrigins: ["*"]
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: ""
+# STUN lets a cohost's browser discover its own public address so the relay
+# can send video back to it. Advertised to WHIP clients via OPTIONS/Link.
+webrtcICEServers2:
+  - url: stun:stun.l.google.com:19302
+
+###############################################
+# Auth: anonymous is allowed, but only on our two stream paths.
+
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: publish
+        path: camb
+      - action: publish
+        path: camc
+      - action: read
+        path: camb
+      - action: read
+        path: camc
+  - user: any
+    pass:
+    ips: ["127.0.0.1", "::1"]
+    permissions:
+      - action: api
+      - action: metrics
+      - action: pprof
+
+###############################################
+# Streams
+
+pathDefaults:
+  source: publisher
+  # A reconnecting cohost takes the path back (refresh, Go Live again).
+  overridePublisher: true
+
+paths:
+  camb:
+  camc:

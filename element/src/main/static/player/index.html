@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Quiz Pit — Camera Link</title>
+<style>
+  :root {
+    --bg: #16181f; --panel: #1f2230; --panel2: #262a3c; --line: #34394f;
+    --text: #e8eaf2; --dim: #9aa0b5; --accent: #f94144; --good: #90be6d;
+    --gold: #f9c74f; --blue: #277da1;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  header { display: flex; align-items: center; gap: 14px; padding: 12px 20px; background: var(--panel);
+           border-bottom: 2px solid var(--accent); }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: 1px; }
+  #slotbadge { font-size: 12px; font-weight: 800; letter-spacing: 1px; padding: 2px 10px;
+               border-radius: 10px; background: var(--blue); color: #fff; }
+  #led { font-size: 12px; padding: 2px 10px; border-radius: 10px; background: var(--panel2);
+         color: var(--dim); border: 1px solid var(--line); }
+  #led.connecting, #led.retry { background: #3a2f14; color: var(--gold); border-color: var(--gold); }
+  #led.live { background: var(--good); color: #123; border-color: var(--good); }
+  #led.error { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #elapsed { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--dim); }
+  main { max-width: 720px; margin: 0 auto; padding: 16px 20px 40px; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .card h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--dim); }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .muted { color: var(--dim); font-size: 13px; }
+  select { flex: 1; font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
+           background: var(--panel2); color: var(--text); }
+  video { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; margin-top: 10px;
+          object-fit: cover; }
+  button { font: inherit; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--line);
+           background: var(--panel2); color: var(--text); cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); font-weight: 700; }
+  button:disabled { opacity: .4; cursor: default; }
+  code { font-size: 12px; background: var(--panel2); border: 1px solid var(--line); border-radius: 6px;
+         padding: 6px 8px; word-break: break-all; flex: 1; }
+  #log { margin-top: 10px; font: 12px/1.5 ui-monospace, monospace; color: var(--dim); }
+  #log .log-err { color: var(--accent); }
+  #log .log-ok { color: var(--good); }
+  .statrow { display: flex; justify-content: space-between; padding: 3px 0; font-size: 14px; }
+  .statrow span:last-child { font-variant-numeric: tabular-nums; }
+  #note { background: #23301c; border: 1px solid var(--good); border-radius: 8px; padding: 8px 10px;
+          font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>THE QUIZ PIT</h1>
+  <span id="slotbadge">TROLL B</span>
+  <span id="led">starting…</span>
+  <span id="elapsed"></span>
+</header>
+<main>
+  <div class="card">
+    <h2>Camera</h2>
+    <div class="row"><select id="camsel"></select></div>
+    <video id="prev" autoplay muted playsinline></video>
+    <div class="statrow"><span class="muted">Capture</span><span id="res">—</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button class="primary" id="go">Go Live</button>
+      <button id="stop" disabled>Stop</button>
+      <span class="muted" id="hint">…</span>
+    </div>
+    <div id="note" style="display:none"></div>
+  </div>
+
+  <div class="card">
+    <h2>Link into the show</h2>
+    <div class="row"><code id="hls"></code><button id="copy">Copy</button></div>
+    <p class="muted">The host pastes this URL once into this troll's <b>Camera URL</b> box in
+      the character creator on the show PC — it is remembered from then on.</p>
+    <p class="muted">Your <b>voice is not sent here</b> — stay on the call (Discord etc.).
+      On the show side your picture arrives ~3–4 seconds late; clap once on camera so the
+      host can line the audio up.</p>
+  </div>
+
+  <div class="card">
+    <h2>Status</h2>
+    <div class="statrow"><span class="muted">Send rate</span><span id="fps">—</span></div>
+    <div id="log"></div>
+  </div>
+</main>
+<script>
+"use strict";
+(function () {
+  var qs = new URLSearchParams(location.search);
+  var slot = (qs.get("slot") || "B").toUpperCase();
+  var pathName = slot === "C" ? "camc" : "camb";
+  var relayBase = qs.get("relay") || (location.origin + "/relay");
+  if (relayBase.charAt(relayBase.length - 1) === "/") relayBase = relayBase.slice(0, -1);
+  var whipUrl = relayBase + "/whip/" + pathName + "/whip";
+  var hlsUrl = relayBase + "/hls/" + pathName + "/index.m3u8";
+  var basicUser = qs.get("user") || "";
+  var basicPass = qs.get("pass") || "";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var stream = null, pc = null, sessionUrl = null, sender = null;
+  var intent = false, retryCount = 0, retryTimer = null, statsTimer = null, startTs = 0;
+  var lastBytes = 0, lastT = 0;
+
+  $("slotbadge").textContent = slot === "C" ? "TROLL C" : "TROLL B";
+  $("hls").textContent = hlsUrl;
+
+  function led(state, text) {
+    var el = $("led"); el.className = state; el.textContent = text;
+  }
+  function log(kind, msg) {
+    var el = document.createElement("div");
+    el.className = "log-" + kind;
+    el.textContent = new Date().toLocaleTimeString() + "  " + msg;
+    var box = $("log");
+    box.prepend(el);
+    while (box.children.length > 8) box.removeChild(box.lastChild);
+  }
+  function authHeaders() {
+    if (!basicUser) return {};
+    return { Authorization: "Basic " + btoa(basicUser + ":" + basicPass) };
+  }
+  function camErr(e) {
+    if (e && e.name === "NotAllowedError") return "Camera permission denied — allow it via the icon in the address bar, then press Go Live.";
+    if (e && e.name === "NotFoundError") return "No camera found.";
+    if (e && e.name === "NotReadableError") return "Camera is in use by another app — close it and try again.";
+    return (e && (e.name + ": " + e.message)) || String(e);
+  }
+
+  // ---- camera ----
+  function openCamera(deviceId) {
+    var video;
+    if (deviceId) {
+      video = { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 },
+                frameRate: { ideal: 60, max: 60 } };
+    } else {
+      video = { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60, max: 60 } };
+    }
+    return navigator.mediaDevices.getUserMedia({ video: video, audio: false }).then(function (s) {
+      if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
+      stream = s;
+      $("prev").srcObject = s;
+      var st = s.getVideoTracks()[0].getSettings();
+      $("res").textContent = st.width + "x" + st.height + " @ " + Math.round(st.frameRate || 0) + " fps";
+      return s.getVideoTracks()[0];
+    });
+  }
+
+  function listCams() {
+    return navigator.mediaDevices.enumerateDevices().then(function (devs) {
+      var sel = $("camsel");
+      sel.innerHTML = "";
+      devs.filter(function (d) { return d.kind === "videoinput"; }).forEach(function (d, i) {
+        var o = document.createElement("option");
+        o.value = d.deviceId;
+        o.textContent = d.label || ("Camera " + (i + 1));
+        sel.appendChild(o);
+      });
+    });
+  }
+
+  $("camsel").onchange = function () {
+    var id = this.value;
+    openCamera(id).then(function (track) {
+      if (sender && pc && pc.connectionState === "connected") {
+        return sender.replaceTrack(track).then(function () {
+          log("ok", "camera switched — live link kept");
+        });
+      }
+    }).catch(function (e) { log("err", camErr(e)); });
+  };
+
+  // ---- WHIP ----
+  function fetchIceServers() {
+    return fetch(whipUrl, { method: "OPTIONS", headers: authHeaders() }).then(function (res) {
+      var link = res.headers.get("Link");
+      if (!link) return [{ urls: "stun:stun.l.google.com:19302" }];
+      var servers = link.split(", ").map(function (l) {
+        var m = l.match(/^<(.+?)>; rel="ice-server"/i);
+        return m ? { urls: [m[1]] } : null;
+      }).filter(Boolean);
+      return servers.length ? servers : [{ urls: "stun:stun.l.google.com:19302" }];
+    }).catch(function () {
+      return [{ urls: "stun:stun.l.google.com:19302" }];
+    });
+  }
+
+  function forceH264(sdp) {
+    var sections = sdp.split("m=");
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].indexOf("video") !== 0) continue;
+      var lines = sections[i].split("\r\n");
+      var keep = [], pfs = [];
+      lines.forEach(function (line) {
+        if (line.indexOf("a=rtpmap:") !== 0) { keep.push(line); return; }
+        if (line.toLowerCase().indexOf("h264") !== -1) {
+          pfs.push(line.slice("a=rtpmap:".length).split(" ")[0]);
+          keep.push(line);
+        }
+      });
+      if (!pfs.length) throw new Error("this browser offers no H.264 encoder — use Chrome or Edge on Windows");
+      var out = [], first = true;
+      keep.forEach(function (line) {
+        if (first) {
+          first = false;
+          out.push(line.split(" ").slice(0, 3).concat(pfs).join(" "));
+        } else if (line.indexOf("a=fmtp:") === 0 && pfs.indexOf(line.slice("a=fmtp:".length).split(" ")[0]) === -1) {
+          // drop non-H264 fmtp
+        } else if (line.indexOf("a=rtcp-fb:") === 0 && pfs.indexOf(line.slice("a=rtcp-fb:".length).split(" ")[0]) === -1) {
+          // drop non-H264 rtcp-fb
+        } else {
+          out.push(line);
+        }
+      });
+      sections[i] = out.join("\r\n");
+    }
+    return sections.join("m=");
+  }
+
+  function waitGathering(p) {
+    if (p.iceGatheringState === "complete") return Promise.resolve();
+    return new Promise(function (res) {
+      var done = false;
+      var t = setTimeout(function () { done = true; res(); }, 3000);
+      p.addEventListener("icegatheringstatechange", function () {
+        if (!done && p.iceGatheringState === "complete") { clearTimeout(t); done = true; res(); }
+      });
+    });
+  }
+
+  function publish() {
+    var track = stream.getVideoTracks()[0];
+    return fetchIceServers().then(function (iceServers) {
+      pc = new RTCPeerConnection({ iceServers: iceServers, sdpSemantics: "unified-plan" });
+      var myPc = pc;
+      pc.addTrack(track, stream);
+      sender = null;
+      pc.getSenders().forEach(function (s) { if (s.track === track) sender = s; });
+      pc.getTransceivers().forEach(function (tr) {
+        if (tr.sender.track !== track) return;
+        if (!window.RTCRtpSender || !RTCRtpSender.getCapabilities || !tr.setCodecPreferences) return;
+        var caps = RTCRtpSender.getCapabilities("video");
+        if (!caps || !caps.codecs) return;
+        var h264 = caps.codecs.filter(function (c) { return c.mimeType.toLowerCase().indexOf("h264") !== -1; });
+        if (h264.length) tr.setCodecPreferences(h264);
+      });
+      var capBitrate = Promise.resolve();
+      try {
+        var p = sender.getParameters();
+        if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+        p.encodings[0].maxBitrate = 2000000;
+        capBitrate = sender.setParameters(p);
+      } catch (e) { /* soft cap is still fine */ }
+      myPc.onconnectionstatechange = function () {
+        if (!intent || pc !== myPc) return;
+        if (myPc.connectionState === "connected") onConnected();
+        else if (myPc.connectionState === "failed" || myPc.connectionState === "closed")
+          scheduleRetry("peer connection " + myPc.connectionState);
+      };
+      return capBitrate.catch(function () {}).then(function () { return myPc.createOffer(); });
+    }).then(function (offer) {
+      var sdp = forceH264(offer.sdp);
+      return pc.setLocalDescription(new RTCSessionDescription({ type: "offer", sdp: sdp }));
+    }).then(function () {
+      return waitGathering(pc);
+    }).then(function () {
+      return fetch(whipUrl, {
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/sdp" }, authHeaders()),
+        body: pc.localDescription.sdp
+      });
+    }).then(function (res) {
+      if (res.status === 400) {
+        return res.json().catch(function () { return {}; }).then(function (e) {
+          throw new Error("relay said: " + (e.error || "bad request"));
+        });
+      }
+      if (res.status === 404) throw new Error("relay has no stream path '" + pathName + "' — is the relay running the config from this repo?");
+      if (res.status === 409) throw new Error("this slot is already live elsewhere — stop that browser (or wait a few seconds)");
+      if (res.status === 401 || res.status === 403) throw new Error("relay rejected the credentials");
+      if (!res.ok) throw new Error("relay HTTP " + res.status);
+      sessionUrl = new URL(res.headers.get("location"), whipUrl).toString();
+      return res.text();
+    }).then(function (answer) {
+      return pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: answer }));
+    }).then(function () {
+      log("ok", "signal exchanged — connecting…");
+    });
+  }
+
+  function onConnected() {
+    retryCount = 0;
+    startTs = Date.now();
+    lastBytes = 0; lastT = 0;
+    led("live", "LIVE");
+    $("go").disabled = true;
+    $("stop").disabled = false;
+    $("note").style.display = "block";
+    $("note").textContent = "You are live. Send the host the URL below — that's everything you need to do.";
+    log("ok", "camera is live");
+    if (statsTimer) clearInterval(statsTimer);
+    statsTimer = setInterval(stats, 1000);
+  }
+
+  function stats() {
+    if (pc) {
+      var now = Date.now();
+      pc.getStats().then(function (reports) {
+        reports.forEach(function (r) {
+          if (r.type !== "outbound-rtp") return;
+          if (r.kind !== undefined && r.kind !== "video") return;
+          if (r.mediaType !== undefined && r.mediaType !== "video") return;
+          if (!lastT) { lastBytes = r.bytesSent; lastT = now; return; }
+          var mbps = (r.bytesSent - lastBytes) * 8 / (now - lastT) / 1000000;
+          lastBytes = r.bytesSent; lastT = now;
+          $("fps").textContent = (r.framesPerSecond || 0) + " fps · " + Math.max(0, mbps).toFixed(2) + " Mbps";
+        });
+      }).catch(function () {});
+    }
+    if (startTs) {
+      var s = Math.floor((Date.now() - startTs) / 1000);
+      $("elapsed").textContent = ("0" + Math.floor(s / 60)).slice(-2) + ":" + ("0" + (s % 60)).slice(-2);
+    }
+  }
+
+  function teardown(sendDelete) {
+    if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+    if (statsTimer) { clearInterval(statsTimer); statsTimer = null; }
+    var su = sessionUrl; sessionUrl = null;
+    var oldPc = pc; pc = null; sender = null;
+    if (oldPc) { oldPc.onconnectionstatechange = null; try { oldPc.close(); } catch (e) {} }
+    if (sendDelete && su) fetch(su, { method: "DELETE", keepalive: true }).catch(function () {});
+  }
+
+  function scheduleRetry(reason) {
+    if (!intent) return;
+    teardown(true);
+    retryCount++;
+    led("retry", "retry " + retryCount);
+    log("err", reason + " — retrying in 2s");
+    retryTimer = setTimeout(goLive, 2000);
+  }
+
+  function goLive() {
+    if (!stream) { log("err", "no camera yet"); return; }
+    intent = true;
+    led("connecting", retryCount ? "retry " + retryCount : "connecting…");
+    $("go").disabled = true;
+    $("stop").disabled = false;
+    publish().catch(function (e) {
+      var msg = (e && e.message) || String(e);
+      if (e instanceof TypeError || /HTTP 5\d\d/.test(msg)) { scheduleRetry(msg); return; }
+      intent = false;
+      led("error", "error");
+      $("go").disabled = false;
+      $("stop").disabled = true;
+      log("err", msg);
+    });
+  }
+
+  $("go").onclick = function () { retryCount = 0; goLive(); };
+  $("stop").onclick = function () {
+    intent = false;
+    teardown(true);
+    led("idle", "stopped");
+    $("go").disabled = false;
+    $("stop").disabled = true;
+    $("fps").textContent = "—";
+    $("elapsed").textContent = "";
+    $("note").style.display = "none";
+    startTs = 0; lastBytes = 0; lastT = 0;
+    log("ok", "stopped");
+  };
+  $("copy").onclick = function () {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(hlsUrl).then(function () { log("ok", "URL copied to clipboard"); });
+    }
+  };
+  window.addEventListener("pagehide", function () {
+    intent = false;
+    teardown(true);
+  });
+
+  (function init() {
+    if (!/^https?:$/.test(location.protocol) && !qs.get("relay")) {
+      led("error", "config");
+      log("err", "open this page over http(s), or pass ?relay=https://<server>/relay");
+      return;
+    }
+    openCamera(null).then(function () {
+      return listCams();
+    }).then(function () {
+      led("idle", "ready");
+      $("hint").textContent = "720p60 H.264, capped at 2 Mbps.";
+      log("ok", "camera ready — press Go Live");
+    }).catch(function (e) {
+      led("error", "camera error");
+      log("err", camErr(e));
+    });
+  })();
+})();
+</script>
+</body>
+</html>
