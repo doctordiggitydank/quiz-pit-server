@@ -14,7 +14,7 @@
 
 services:
   mediamtx:
-    image: bluenviron/mediamtx:v1.21.2
+    image: bluenviron/mediamtx:1.21.2
     restart: unless-stopped
     network_mode: host
     volumes:
