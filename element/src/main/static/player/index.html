@@ -96,8 +96,14 @@
   var pathName = slot === "C" ? "camc" : "camb";
   var relayBase = qs.get("relay") || (location.origin + "/relay");
   if (relayBase.charAt(relayBase.length - 1) === "/") relayBase = relayBase.slice(0, -1);
-  var whipUrl = relayBase + "/whip/" + pathName + "/whip";
-  var hlsUrl = relayBase + "/hls/" + pathName + "/index.m3u8";
+  var whipOverride = qs.get("whip");
+  var hlsOverride = qs.get("hls");
+  var whipUrl = whipOverride
+    ? whipOverride.replace(/\/$/, "") + "/" + pathName + "/whip"
+    : relayBase + "/whip/" + pathName + "/whip";
+  var hlsUrl = hlsOverride
+    ? hlsOverride.replace(/\/$/, "") + "/" + pathName + "/index.m3u8"
+    : relayBase + "/hls/" + pathName + "/index.m3u8";
   var basicUser = qs.get("user") || "";
   var basicPass = qs.get("pass") || "";
 
